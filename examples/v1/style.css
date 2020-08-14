@@ -1,0 +1,9 @@
+video {
+    width: 200px;
+    height: 200px;
+}
+
+/* 追加されていくvideoには class="remote"がつくのでそのスタイル */
+.remote {
+    border:1px solid #F00;
+}
