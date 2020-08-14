@@ -1,9 +1,11 @@
 'use strict'; 
 const apiKey = '578c3538-0921-4902-98de-9472d78169ca'; 
+let members = 0;
 
 (async function main() {
     const remoteVideos = document.getElementById("remote-videos");
     const localVideo = document.getElementById("local-video");
+    const counter = document.getElementById("counter");
     const localStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
@@ -40,8 +42,7 @@ const apiKey = '578c3538-0921-4902-98de-9472d78169ca';
             // TODO: このroomにいる他の人たちを表示したいが２名だとうまく取れない
             // これを取得することで特定人数より多い参加を許可しないようにする
             console.log(room.name, Object.keys(room.connections))
-            const counter = document.getElementById("counter");
-            counter.innerText = Object.keys(room.connections).length;
+            counter.innerText = Object.keys(room.connections).length + 1;
         });
 
         // streamが届いたら新規参加者の映像を受信したことになるはず
