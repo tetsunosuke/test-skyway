@@ -36,11 +36,15 @@ let members = 0;
         // 新規入室
         room.on('open', () => {
             console.log("room open");
+            // 入室時にも算出する？？
+            console.log(room.name, Object.keys(room.connections))
+            counter.innerText = Object.keys(room.connections).length + 1;
         });
         room.on('peerJoin', (peerId) => { 
             console.log("peerJoin", `peerId=${peerId}`); 
             // TODO: このroomにいる他の人たちを表示したいが２名だとうまく取れない
             // これを取得することで特定人数より多い参加を許可しないようにする
+            // このイベントはそもそも「誰かが入室したとき」に発火するので自分が参加したときに取れない
             console.log(room.name, Object.keys(room.connections))
             counter.innerText = Object.keys(room.connections).length + 1;
         });
