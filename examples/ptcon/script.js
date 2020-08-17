@@ -1,30 +1,69 @@
 'use strict'; 
 const apiKey = window.__APIKEY__;
-let members = 0;
 let peer;
-let localStream;
-let localVideo;
-let remoteVideos;
+const localVideo = document.getElementById("local-video");
+const remoteVideos = document.getElementById("remote-videos");
+const audioInputSelect = document.querySelector('select#audioSource');
+const audioOutputSelect = document.querySelector('select#audioOutput');
+const videoSelect = document.querySelector('select#videoSource');
+// 各面談室へのリンク。これがクリックされたときにroomを開く仕様にしている
+const meetings = document.querySelectorAll(".room-trigger");
 
-(async function main() {
-    remoteVideos = document.getElementById("remote-videos");
-    localVideo = document.getElementById("local-video");
-
-    // 自分のビデオを描画
-    localStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true,
-    }).catch(console.error);
-
+const gotStream = ((stream) => {
+    window.stream = stream;
+    localVideo.srcObject = stream;
     localVideo.muted = true;
-    localVideo.srcObject = localStream;
     localVideo.playsInline = true;
-    await localVideo.play().catch(console.error);
+    localVideo.play().catch(console.error);
+    return navigator.mediaDevices.enumerateDevices();
+});
+// https://github.com/webrtc/samples/blob/gh-pages/src/content/devices/input-output/js/main.js を参考にほぼそのまま
+const gotDevices = ((deviceInfos) => {
+    const selectors = [videoSelect];
+    const values = selectors.map(select => select.value);
+    selectors.forEach(select => {
+        while (select.firstChild) {
+            select.removeChild(select.firstChild);
+        }
+    });
+    for (let i = 0; i !== deviceInfos.length; ++i) {
+        const deviceInfo = deviceInfos[i];
+        const option = document.createElement('option');
+        option.value = deviceInfo.deviceId;
+        if (deviceInfo.kind === 'audioinput') {
+            // 一旦こちらは無効に
+            //option.text = deviceInfo.label || `microphone ${audioInputSelect.length + 1}`;
+            //audioInputSelect.appendChild(option);
+        } else if (deviceInfo.kind === 'audiooutput') {
+            // 一旦こちらは無効に
+            // option.text = deviceInfo.label || `speaker ${audioOutputSelect.length + 1}`;
+            //audioOutputSelect.appendChild(option);
+        } else if (deviceInfo.kind === 'videoinput') {
+            option.text = deviceInfo.label || `camera ${videoSelect.length + 1}`;
+            videoSelect.appendChild(option);
+        } else {
+            console.log('Some other kind of source/device: ', deviceInfo);
+        }
+    }
+    selectors.forEach((select, selectorIndex) => {
+        if (Array.prototype.slice.call(select.childNodes).some(n => n.value === values[selectorIndex])) {
+            select.value = values[selectorIndex];
+        }
+    });
+});
+const main = () =>  {
+    if (window.stream) {
+        window.stream.getTracks().forEach(track => { track.stop() });
+    }
+    const videoSource = videoSelect.value;
+    const constraints =  {
+        audio: true,
+        video: { deviceId: videoSource ? { exact: videoSource } : undefined }
+    };
+    navigator.mediaDevices.getUserMedia(constraints).then(gotStream).then(gotDevices).catch(console.error);
 
-    // 各面談室へのリンク。これがクリックされたときにroomを開く仕様にしている
-    const meetings = document.querySelectorAll(".room-trigger");
-    meetings.forEach(meeting => meeting.addEventListener("click", onClickRoomTrigger));
 
+    // skyway 接続
     peer = new Peer({
         key: apiKey,
         debug: 0,
@@ -39,7 +78,7 @@ let remoteVideos;
     peer.on('close', (arg) => { console.log("close", arg); });
     peer.on('disconnected', (arg) => { console.log("disconnected", arg); });
     peer.on('call', (arg) => { console.log("call", arg); });
-})();
+};
 
 
 /**
@@ -51,11 +90,11 @@ const onClickRoomTrigger = ( (e) => {
     }
 
     const room = peer.joinRoom(e.target.id, {
-        stream: localStream,
+        stream: window.stream,
     });
     // TODO: 要調査 これによりなんらかの数字が設定されるが効果がない...リファレンスにない関数呼んでるんだけど
     // これ自体は同じ画面でroomに二度入ろうとすることを防げるっぽい
-    room.setMaxListeners(1);
+    room.setMaxListeners(2);
 
     // roomへの入室
     room.on('open', () => {
@@ -77,8 +116,8 @@ const onClickRoomTrigger = ( (e) => {
     });
 
     // 誰かがroomに入ってきた
-    room.on('peerJoin', (peerId) => { 
-        console.log("room peerJoin", `peerId=${peerId}`); 
+    room.on('peerJoin', (peerId) => {
+        console.log("room peerJoin", `peerId=${peerId}`);
         console.log(`remotevideos count=${remoteVideos.getElementsByTagName("video").length}`);
     });
 
@@ -96,6 +135,7 @@ const onClickRoomTrigger = ( (e) => {
             newVideo.play().catch(console.error);
         } else {
             // 上記のコードでどんどん追加することはできるが、1:1面談前提なのでここで切る
+            // TODO: 入られる方は問題ないが、入った人が既存の部屋を見れてしまうので修正したほうが良い
             console.warn("二人目以降の接続は表示しません");
         }
     });
@@ -114,3 +154,12 @@ const onClickRoomTrigger = ( (e) => {
     // TODO: 何かお掃除の必要があるかも
     room.on('close', () => { console.log("close"); });
 });
+
+
+// main
+// 最初に取得可能なデバイス群をリストして、プルダウンを生成する
+navigator.mediaDevices.enumerateDevices().then(gotDevices).then(() => {
+    meetings.forEach(meeting => meeting.addEventListener("click", onClickRoomTrigger));
+    videoSelect.addEventListener("change", main);
+    main();
+}).catch(console.error);
