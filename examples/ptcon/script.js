@@ -94,7 +94,7 @@ const onClickRoomTrigger = ( (e) => {
     });
     // TODO: 要調査 これによりなんらかの数字が設定されるが効果がない...リファレンスにない関数呼んでるんだけど
     // これ自体は同じ画面でroomに二度入ろうとすることを防げるっぽい
-    room.setMaxListeners(2);
+    room.setMaxListeners(window.__MAX_LISTENERS__);
 
     // roomへの入室
     room.on('open', () => {
