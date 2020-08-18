@@ -10,7 +10,7 @@ const videoSelect = document.querySelector('select#videoSource');
 const meetings = document.querySelectorAll(".room-trigger");
 
 const gotStream = ((stream) => {
-    window.stream = stream;
+    window.localStream = stream;
     localVideo.srcObject = stream;
     localVideo.muted = true;
     localVideo.playsInline = true;
@@ -18,6 +18,7 @@ const gotStream = ((stream) => {
     return navigator.mediaDevices.enumerateDevices();
 });
 // https://github.com/webrtc/samples/blob/gh-pages/src/content/devices/input-output/js/main.js を参考にほぼそのまま
+// audio系はあえて選択しないようにしています
 const gotDevices = ((deviceInfos) => {
     const selectors = [videoSelect];
     const values = selectors.map(select => select.value);
@@ -52,14 +53,15 @@ const gotDevices = ((deviceInfos) => {
     });
 });
 const main = () =>  {
-    if (window.stream) {
-        window.stream.getTracks().forEach(track => { track.stop() });
+    if (window.localStream) {
+        window.localStream.getTracks().forEach(track => { track.stop() });
     }
     const videoSource = videoSelect.value;
     const constraints =  {
         audio: true,
         video: { deviceId: videoSource ? { exact: videoSource } : undefined }
     };
+    // 利用可能なデバイス一覧から指定されたものを利用する
     navigator.mediaDevices.getUserMedia(constraints).then(gotStream).then(gotDevices).catch(console.error);
 
 
@@ -69,7 +71,8 @@ const main = () =>  {
         debug: 0,
     });
 
-    // イベント
+    ////  イベント
+    // 接続
     peer.on('open', () => { 
         console.log("peer open", `YOUR peerId=${peer.id}`, peer);
     });
@@ -90,17 +93,18 @@ const onClickRoomTrigger = ( (e) => {
     }
 
     const room = peer.joinRoom(e.target.id, {
-        stream: window.stream,
+        stream: window.localStream,
     });
     // TODO: 要調査 これによりなんらかの数字が設定されるが効果がない...リファレンスにない関数呼んでるんだけど
     // これ自体は同じ画面でroomに二度入ろうとすることを防げるっぽい
     room.setMaxListeners(window.__MAX_LISTENERS__);
 
     // roomへの入室
+    // 入室した段階ではroom.connectionsは増えない（streamを受信して確立してから）
     room.on('open', () => {
         console.log(`room open. room.name=${room.name}`);
         localVideo.setAttribute("class", "in-room");
-        // 自分自身じゃないroomは退室する。接続相手のstreamを消す
+        // 選択していないroomは退室する。接続相手のstreamを消す
         Object.keys(peer.rooms).forEach(roomName => {
             if (room.name !== roomName) {
                 // 画面から相手のpeerIdを全部消してroomを退出する
@@ -116,28 +120,22 @@ const onClickRoomTrigger = ( (e) => {
     });
 
     // 誰かがroomに入ってきた
+    // streamの受信まではroom.connectionsは増えない（streamを受信して確立してから）
     room.on('peerJoin', (peerId) => {
         console.log("room peerJoin", `peerId=${peerId}`);
-        console.log(`remotevideos count=${remoteVideos.getElementsByTagName("video").length}`);
     });
 
     // 新規参加者の映像を受信
     // そのpeerIdでvideo要素を作成する
     room.on('stream', async stream => {
         console.log("stream", stream);
-        if (remoteVideos.getElementsByTagName("video").length === 0) {
-            const newVideo = document.createElement("video");
-            newVideo.srcObject = stream;
-            newVideo.playsInline = true;
-            newVideo.setAttribute("data-peer-id", stream.peerId);
-            newVideo.setAttribute("class", "remote");
-            remoteVideos.appendChild(newVideo);
-            newVideo.play().catch(console.error);
-        } else {
-            // 上記のコードでどんどん追加することはできるが、1:1面談前提なのでここで切る
-            // TODO: 入られる方は問題ないが、入った人が既存の部屋を見れてしまうので修正したほうが良い
-            console.warn("二人目以降の接続は表示しません");
-        }
+        const newVideo = document.createElement("video");
+        newVideo.srcObject = stream;
+        newVideo.playsInline = true;
+        newVideo.setAttribute("data-peer-id", stream.peerId);
+        newVideo.setAttribute("class", "remote");
+        remoteVideos.appendChild(newVideo);
+        newVideo.play().catch(console.error);
     });
     // 参加者がroomから抜けた: leaveしたpeerIdに対応するvideo要素を消す
     room.on('peerLeave', (peerId) => {
