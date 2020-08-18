@@ -110,9 +110,11 @@ const onClickRoomTrigger = ( (e) => {
                 // 画面から相手のpeerIdを全部消してroomを退出する
                 Object.keys(peer.rooms[roomName].connections).forEach(peerId => {
                     const remoteVideo = remoteVideos.querySelector(`[data-peer-id="${peerId}"]`);
-                    remoteVideo.srcObject.getTracks().forEach(track => track.stop());
-                    remoteVideo.srcObject = null;
-                    remoteVideo.remove();
+                    if (remoteVideo.srcObject) {
+                        remoteVideo.srcObject.getTracks().forEach(track => track.stop());
+                        remoteVideo.srcObject = null;
+                        remoteVideo.remove();
+                    }
                 });
                 peer.rooms[roomName].close();
             }
