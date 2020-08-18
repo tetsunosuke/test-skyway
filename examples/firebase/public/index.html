@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head lang="ja">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>ptcon demo</title>
+<link rel="stylesheet" href="style.css">
+<!-- SDKの読み込み -->
+<script type="text/javascript" src="https://cdn.webrtc.ecl.ntt.com/skyway-latest.js"></script>
+</head>
+<body>
+<div>
+    <!-- 面談の各部屋を指定したリンク -->
+    <div>
+        <ul id="rooms">
+            <li><a href="#" class="room-trigger" id="room1">10:00〜10:30 ◯◯さん (room1)</a></li>
+            <li><a href="#" class="room-trigger" id="room2">10:00〜11:00 ◯◯さん (room2)</a></li>
+            <li><a href="#" class="room-trigger" id="room3">11:00〜11:30 ◯◯さん (room3)</a></li>
+            <li><a href="#" class="room-trigger" id="yobi1">予備1</a></li>
+            <li><a href="#" class="room-trigger" id="yobi2">予備2</a></li>
+            <li><a href="#" class="room-trigger" id="yobi3">予備3</a></li>
+        </ul>
+    </div>
+    <div>
+        <!-- カメラ等のデバイス設定 -->
+        <div id="devices">
+            <select id="videoSource"></select>
+        </div>
+    </div>
+    <!-- ビデオ表示用 -->
+    <div>
+        <div id="local-videos">
+            <!-- ここに1件の自分の映像がはめ込まれる -->
+            <!-- videoタグなのでcontrolsをつければ当然ミュートや停止にはできる -->
+            <video id="local-video" autoplay controls></video>
+        </div>
+        <div id="remote-videos">
+            <!-- ここに 接続してきた相手の映像が追加されていく -->
+                <!-- <video class="remote" data-peer-id="xxxxxx"></video> -->
+        </div>
+    </div>
+</div>
+<div>
+    <h1>サンプルの説明</h1>
+    <ul>
+        <li>初回読み込み時は自分の映像だけが表示されます</li>
+        <li>roomを選択するとroomにjoinします（このときスタイルを付与しています)</li>
+        <li>他の接続者が同じroomを選択するとremote-videosにビデオが表示されます</li>
+        <li>注意</li>
+        <ul>
+        <li>同じroomに入室があった場合、そのroomにどんどん人が増えてしまいます</li>
+        <li>このサンプルの仕様ではリンククリック時に入室処理しているので再読込すると部屋から出てしまいます</li>
+        </ul>
+    </ul>
+</div>
+<script src="/__/firebase/7.17.1/firebase-app.js"></script>
+<!-- Add Firebase products that you want to use -->
+<script src="/__/firebase/7.17.1/firebase-firestore.js"></script>
+<script src="/__/firebase/init.js"></script>
+<!-- 当社カスタマイズ分のプログラムの読み込み -->
+<script type="text/javascript" src="settings.js"></script>
+<script type="text/javascript" src="script.js"></script>
+</body>
+</html>

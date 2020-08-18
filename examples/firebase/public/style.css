@@ -1,0 +1,15 @@
+/**/
+/** 一旦小さめに表示するためのテスト**/
+video {
+    width: 240px;
+    height: 180px;
+}
+
+/** 入室状態を表す **/
+video.in-room {
+    border: 5px solid #00F;
+}
+
+video.remote {
+    border: 5px solid #F00;
+}

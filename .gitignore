@@ -186,3 +186,6 @@ tramp
 # JSDocs
 docs
 
+
+# Firebase
+.firebase/
