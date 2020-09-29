@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@types/node": "^12.6.8",
-    "detect-browser": "^4.6.0",
+    "detect-browser": "^5.1.1",
     "enum": "git+https://github.com/eastandwest/enum.git#react-native",
     "events": "^3.0.0",
     "js-binarypack": "0.0.9",
