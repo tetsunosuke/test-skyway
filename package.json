@@ -26,7 +26,7 @@
   "author": "NTT Communications Corp.",
   "license": "Apache-2.0",
   "devDependencies": {
-    "babel-loader": "8.2.2",
+    "babel-loader": "8.2.5",
     "babel-plugin-espower": "3.0.1",
     "babel-plugin-istanbul": "6.0.0",
     "babel-preset-es2015": "^6.24.1",
