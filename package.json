@@ -50,7 +50,7 @@
     "webpack-cli": "^4.2.0"
   },
   "dependencies": {
-    "@types/node": "^16.4.13",
+    "@types/node": "^18.0.0",
     "detect-browser": "^5.2.0",
     "enum": "git+https://github.com/eastandwest/enum.git#react-native",
     "events": "^3.0.0",
